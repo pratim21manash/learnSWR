@@ -44,7 +44,16 @@ const App = () => {
       console.log(err)
     }
   }
-
+  
+  const deleteProduct = async (id: string) => {
+    try {
+      await axios.delete(`/product/${id}`)
+      mutate('/product')
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
 
   return (
     <div className='w-11/12 mx-auto p-12 bg-gray-200 flex gap-12'>
@@ -67,7 +76,7 @@ const App = () => {
             <div className='bg-white rounded-lg p-8 shadow' key={index}>
               <h1 className='text-xl font-semibold'>{item.title}</h1>
               <p className='text-lg text-gray-500'>{item.price}</p>
-              <button className='p-3 bg-rose-500 text-white rounded hover:bg-rose-600 mt-4'>
+              <button onClick={()=>deleteProduct(item._id)} className='p-3 bg-rose-500 text-white rounded hover:bg-rose-600 mt-4'>
                 <i className='ri-delete-bin-2-line'></i>
               </button>
             </div>

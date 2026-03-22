@@ -1,11 +1,21 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
 import 'remixicon/fonts/remixicon.css'
 import axios from 'axios'
+import useSWR, { mutate } from 'swr'
 axios.defaults.baseURL = "http://localhost:8080"
 
+const fetcher = async (url: string) => {
+  try {
+    const {data} = await axios.get(url)
+    return data
+  }
+  catch(err: any){
+    throw new Error(err)
+  }
+}
+
 const App = () => {
-  const [product, setProduct] = useState([])
-  const [updateCount, setUpdateCount] = useState(0)
+  const {data, error, isLoading} = useSWR('/product', fetcher)
 
   const [form, setForm] = useState({
     title: '',
@@ -23,30 +33,18 @@ const App = () => {
     })
   }
 
-  const addProduct = async(e: FormEvent) => {
+
+  const addProduct = async (e: FormData) => {
     try {
       e.preventDefault()
-      await axios.post("/product", form)
-      setUpdateCount(updateCount + 1)
+      const {data} = await axios.post('/product', form)
+      mutate('/product')
     }
     catch(err){
       console.log(err)
     }
   }
 
-  useEffect(()=>{
-    fetchProduct()
-  }, [updateCount])
-
-  const fetchProduct =async () => {
-    const {data} = await axios.get("/product")
-    setProduct(data)
-  }
-
-  const deleteProduct = async (id: string) => {
-    await axios.delete(`/product/${id}`)
-    setUpdateCount(updateCount + 1)
-  }
 
   return (
     <div className='w-11/12 mx-auto p-12 bg-gray-200 flex gap-12'>
@@ -62,11 +60,14 @@ const App = () => {
 
       <div className='flex-1 grid grid-cols-3 gap-6'>
         {
-          product.map((item: any,index) => (
+          isLoading && "Loading...."
+        }
+        {
+          data && data.map((item: any,index: number) => (
             <div className='bg-white rounded-lg p-8 shadow' key={index}>
               <h1 className='text-xl font-semibold'>{item.title}</h1>
               <p className='text-lg text-gray-500'>{item.price}</p>
-              <button onClick={()=>deleteProduct(item._id)} className='p-3 bg-rose-500 text-white rounded hover:bg-rose-600 mt-4'>
+              <button className='p-3 bg-rose-500 text-white rounded hover:bg-rose-600 mt-4'>
                 <i className='ri-delete-bin-2-line'></i>
               </button>
             </div>
